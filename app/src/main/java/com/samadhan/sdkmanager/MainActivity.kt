@@ -13,11 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.samadhan.sdk.SdkInitializer
 import com.samadhan.sdkmanager.ui.theme.SDKManagerTheme
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,17 +27,10 @@ class MainActivity : ComponentActivity() {
         SdkInitializer.init("https://jsonplaceholder.typicode.com/")
 
         setContent {
+            val viewModel: UserViewModel = hiltViewModel()
+            val userState = viewModel.uiState.value
+            Log.e("TAG", "onCreate: ${userState.user}", )
             SDKManagerTheme {
-                GlobalScope.launch {
-                    try {
-                        val user = SdkInitializer.getUserUseCase("1")
-                        Log.d("User", user.toString())
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Log.e("SDK", "Error: ${e.message}")
-                    }
-
-                }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",

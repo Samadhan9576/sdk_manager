@@ -1,7 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
 }
+
 
 android {
     namespace = "com.samadhan.sdk"
@@ -44,4 +47,8 @@ dependencies {
         implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
         implementation ("com.squareup.retrofit2:retrofit:2.9.0")
         implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // ✅ Hilt dependencies
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
 }
