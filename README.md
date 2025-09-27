@@ -1,4 +1,4 @@
-# My First Android SDK
+# Android SDK
 
 This is my first attempt at creating an **Android SDK (.aar)**.  
 The purpose of this SDK is to provide reusable services and functionalities that can be easily integrated into other Android applications.
