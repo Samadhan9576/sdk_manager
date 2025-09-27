@@ -1,4 +1,4 @@
-package com.samadhan.sdk.SDK
+package com.samadhan.sdk
 
 
 import android.util.Log

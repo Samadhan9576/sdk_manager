@@ -1,4 +1,4 @@
-package com.samadhan.sdk.SDK.data
+package com.samadhan.sdk.data
 
 import retrofit2.http.GET
 import retrofit2.http.Path

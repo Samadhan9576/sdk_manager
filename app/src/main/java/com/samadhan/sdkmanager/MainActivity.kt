@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.samadhan.sdk.SDK.SdkInitializer
+import com.samadhan.sdk.SdkInitializer
 import com.samadhan.sdkmanager.ui.theme.SDKManagerTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
