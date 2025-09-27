@@ -2,9 +2,9 @@ package com.samadhan.sdk
 
 
 import android.util.Log
-import com.samadhan.sdk.SDK.data.GetUserUseCase
-import com.samadhan.sdk.SDK.data.UserApiService
-import com.samadhan.sdk.SDK.data.UserRepositoryImpl
+import com.samadhan.sdk.domain.service.UserApiService
+import com.samadhan.sdk.domain.service.UserRepositoryImpl
+import com.samadhan.sdk.domain.usecase.GetUserUseCase
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

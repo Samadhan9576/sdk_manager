@@ -13,7 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
 import com.samadhan.sdk.SdkInitializer
+import com.samadhan.sdk.data.model.ServiceResult
 import com.samadhan.sdkmanager.ui.theme.SDKManagerTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -26,17 +28,23 @@ class MainActivity : ComponentActivity() {
         SdkInitializer.init("https://jsonplaceholder.typicode.com/")
 
         setContent {
-            SDKManagerTheme {
-                GlobalScope.launch {
-                    try {
-                        val user = SdkInitializer.getUserUseCase("1")
-                        Log.d("User", user.toString())
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Log.e("SDK", "Error: ${e.message}")
-                    }
+            lifecycleScope.launch {
+                val result = SdkInitializer.getUserUseCase("1")
 
+                when (result) {
+                    is ServiceResult.Success -> {
+                        val user = result.data
+                        Log.d("SDK", "User: $user")
+                    }
+                    is ServiceResult.Error -> {
+                        Log.e("SDK", "Error: ${result.exception.message}")
+                    }
+                    is ServiceResult.Loading -> {
+                        // You might not need this, since it’s not emitted
+                    }
                 }
+            }
+            SDKManagerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
