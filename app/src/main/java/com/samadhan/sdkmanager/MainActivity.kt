@@ -13,13 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.lifecycleScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.samadhan.sdk.SdkInitializer
-import com.samadhan.sdk.data.model.ServiceResult
 import com.samadhan.sdkmanager.ui.theme.SDKManagerTheme
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,22 +27,9 @@ class MainActivity : ComponentActivity() {
         SdkInitializer.init("https://jsonplaceholder.typicode.com/")
 
         setContent {
-            lifecycleScope.launch {
-                val result = SdkInitializer.getUserUseCase("1")
-
-                when (result) {
-                    is ServiceResult.Success -> {
-                        val user = result.data
-                        Log.d("SDK", "User: $user")
-                    }
-                    is ServiceResult.Error -> {
-                        Log.e("SDK", "Error: ${result.exception.message}")
-                    }
-                    is ServiceResult.Loading -> {
-                        // You might not need this, since it’s not emitted
-                    }
-                }
-            }
+            val viewModel: UserViewModel = hiltViewModel()
+            val userState = viewModel.uiState.value
+            Log.e("TAG", "onCreate: ${userState.user}", )
             SDKManagerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
