@@ -1,11 +1,13 @@
 package com.samadhan.sdk.di
 
-import android.util.Log
+import com.google.gson.GsonBuilder
 import com.samadhan.sdk.SdkInitializer
+import com.samadhan.sdk.domain.service.PollSevices.PoleApiServices
+import com.samadhan.sdk.domain.service.PollSevices.PoleRepository
+import com.samadhan.sdk.domain.service.PollSevices.PoleRepositoryImpl
 import com.samadhan.sdk.domain.service.UserApiService
 import com.samadhan.sdk.domain.service.UserRepository
 import com.samadhan.sdk.domain.service.UserRepositoryImpl
-import com.samadhan.sdk.domain.usecase.GetUserUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,45 +16,62 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 
-// In SDK module
 @Module
 @InstallIn(SingletonComponent::class)
 object SdkModule {
 
-    @Provides
-    fun provideBaseUrl(): String {
-        // Default base URL or throw error if not initialized
-        return SdkInitializer.baseUrl ?: throw IllegalStateException("SDK not initialized")
-    }
+    private val loggingInterceptor = HttpLoggingInterceptor()
+        .apply { level = HttpLoggingInterceptor.Level.BODY }
+
+    private val client = OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
 
     @Provides
-    fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor { Log.d("SDK", it) }
-        logging.level = HttpLoggingInterceptor.Level.BODY
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
-    }
-
-    @Provides
-    fun provideRetrofit(baseUrl: String, client: OkHttpClient): Retrofit {
+    @Singleton
+    fun providesRegistartionPostApi(): UserApiService {
+        val baseUrl = SdkInitializer.baseUrl
+        val gson = GsonBuilder()
+            .disableHtmlEscaping()
+            .create()
         return Retrofit.Builder()
             .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
             .build()
+            .create(UserApiService::class.java)
     }
 
     @Provides
-    fun provideUserApiService(retrofit: Retrofit): UserApiService =
-        retrofit.create(UserApiService::class.java)
+    @Singleton
+    fun provideRegisterRepository(api: UserApiService): UserRepository {
+        return UserRepositoryImpl(api)
+    }
 
     @Provides
-    fun provideUserRepository(api: UserApiService): UserRepository =
-        UserRepositoryImpl(api)
+    @Singleton
+    fun providesPoleService(): PoleApiServices {
+        val baseUrl = SdkInitializer.poleBaseUrl
+        val gson = GsonBuilder()
+            .disableHtmlEscaping()
+            .create()
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .client(client)
+            .build()
+            .create(PoleApiServices::class.java)
+    }
 
     @Provides
-    fun provideGetUserUseCase(repository: UserRepository): GetUserUseCase =
-        GetUserUseCase(repository)
+    @Singleton
+    fun providePoleServices(api: PoleApiServices): PoleRepository {
+        return PoleRepositoryImpl(api)
+    }
 }
