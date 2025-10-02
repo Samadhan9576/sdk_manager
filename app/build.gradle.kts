@@ -66,4 +66,7 @@ dependencies {
 
 //    hiltViewModel
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
+    implementation("androidx.compose.runtime:runtime:1.6.0")
 }

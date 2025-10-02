@@ -1,15 +1,17 @@
-package com.samadhan.sdkmanager.viewModel
+package com.samadhan.sdkmanager.domain.viewModel
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.samadhan.sdk.data.model.LoginRequest
 import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.ServiceResult
 import com.samadhan.sdk.domain.usecase.pole.PoleLoginUseCase
-import com.samadhan.sdkmanager.UserUiState
+import com.samadhan.sdkmanager.domain.event.LoginEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,20 +20,26 @@ class LoginViewModel @Inject constructor(
     private val loginUseCase: PoleLoginUseCase
 ) : ViewModel() {
 
-    private val _uiState = mutableStateOf(LoginState())
-    val uiState: State<LoginState> = _uiState
+    private val _uiState = MutableStateFlow(LoginState())
+    val uiState: StateFlow<LoginState> = _uiState
+    private val _events = Channel<LoginEvent>()
+    val events = _events.receiveAsFlow()
 
     fun login(email:String, password:String, remember:Boolean) {
         viewModelScope.launch {
             val result = loginUseCase.invoke(LoginRequest(email,password,remember))
             when(result){
                 is ServiceResult.Loading -> {
-
+                    _uiState.value = LoginState(isLoading = true)
                 }
                 is ServiceResult.Success -> {
-                    _uiState.value = LoginState(response = result.data)
+                    _events.send(LoginEvent.OnLoginSuccess)
+                    _uiState.value = LoginState(response = result.data, isLoading = false)
                 }
-                is ServiceResult.Error -> {}
+                is ServiceResult.Error -> {
+                    _uiState.value = LoginState(error = "")
+                    _events.send(LoginEvent.ShowSnackBar)
+                }
             }
         }
     }

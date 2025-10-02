@@ -4,6 +4,7 @@ import android.util.Log
 import com.samadhan.sdk.data.model.LoginRequest
 import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.ServiceResult
+import com.samadhan.sdk.domain.Constants
 import com.samadhan.sdk.domain.service.PollSevices.PoleRepository
 import javax.inject.Inject
 
@@ -15,6 +16,8 @@ class PoleLoginUseCase @Inject constructor(
             ServiceResult.Loading
             val response = repository.poleLogin(loginRequest)
             if (response.status == "success") {
+                Constants.token = response.jwtToken
+                Constants.userId = response.userDetails.userId
                 ServiceResult.Success(response)
             } else {
                 ServiceResult.Error("serviceError")
