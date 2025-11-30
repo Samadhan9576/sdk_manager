@@ -13,6 +13,8 @@ class GetPoleDetailsUseCase @Inject constructor(
     suspend operator fun invoke(id:Int): ServiceResult<PollDetailsResponse> {
         return try {
             Log.e("TAG", "GetPoleDetailsUseCase: ", )
+            ServiceResult.Loading
+
             val token = Constants.token
             val poleId = id.toLong()
             val result = repository.getPollDetails( "Bearer $token", poleId)

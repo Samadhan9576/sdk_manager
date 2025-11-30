@@ -1,6 +1,8 @@
 package com.samadhan.sdkmanager.domain.viewModel
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -30,7 +32,7 @@ class DashboardViewModel @Inject constructor(
 
     private val _uiState = mutableStateOf(DashboardState())
     val uiState: State<DashboardState> = _uiState
-
+    val isLoading = mutableStateOf(false)
     private val _uiDetailsState = mutableStateOf(DetailsState())
     val uiDetailsState: State<DetailsState> = _uiDetailsState
     private val _events = Channel<LoginEvent>()
@@ -41,15 +43,18 @@ class DashboardViewModel @Inject constructor(
     fun getPole() {
         viewModelScope.launch {
             val result = getPoleUseCase.invoke()
+            isLoading.value = true
             when(result){
                 is ServiceResult.Loading -> {
                     _uiState.value = DashboardState(isLoading = true)
                 }
                 is ServiceResult.Success -> {
+                    isLoading.value = false
                     Log.e("TAG", "getPole:${result.data} ", )
                     _uiState.value = DashboardState(response = result.data, isLoading = false)
                 }
                 is ServiceResult.Error -> {
+                    isLoading.value = false
                     _uiState.value = DashboardState(error = "")
                     _events.send(LoginEvent.ShowSnackBar)
                 }
@@ -60,18 +65,21 @@ class DashboardViewModel @Inject constructor(
     fun getPoleDetail(id:Int,clickId:Int) {
         viewModelScope.launch {
             val result = getPoleDetailsUseCase.invoke(id)
+            isLoading.value = true
+
             when(result){
                 is ServiceResult.Loading -> {
                     _uiDetailsState.value = DetailsState(isLoading = true)
 
                 }
                 is ServiceResult.Success -> {
+                    isLoading.value = false
                     _events.send(LoginEvent.PoleDetailSuccess(clickId,id))
                     _uiDetailsState.value = DetailsState(isLoading = false,result.data)
-                    Log.e("TAG", "getPole:${result.data} ", )
 
                 }
                 is ServiceResult.Error -> {
+                    isLoading.value = false
                     _events.send(LoginEvent.ShowSnackBar)
                     _uiDetailsState.value = DetailsState(error = "")
 
@@ -82,49 +90,71 @@ class DashboardViewModel @Inject constructor(
     fun getUserSelectedOptions(id:Int) {
         viewModelScope.launch {
             val result = getUserSelectedOptionsUseCase.invoke(id)
+            isLoading.value = true
+
             when(result){
                 is ServiceResult.Loading -> {
 
                 }
                 is ServiceResult.Success -> {
+                    isLoading.value = false
                     Constants.id = id
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {
+                    isLoading.value = false
                     _events.send(LoginEvent.ShowSnackBar)
 
                 }
             }
         }
     }
-    fun savePole(poleId:Int) {
+    fun savePole(poleId: Int, context: Context) {
         viewModelScope.launch {
             val result = savePoleUseCase.invoke(Constants.id,poleId)
+            isLoading.value = true
+
             when(result){
                 is ServiceResult.Loading -> {
 
                 }
                 is ServiceResult.Success -> {
+                    isLoading.value = false
+                    Toast.makeText(
+                        context,
+                        "Pole Save Success",
+                        Toast.LENGTH_SHORT
+                    ).show()
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {
+                    isLoading.value = false
                     _events.send(LoginEvent.ShowSnackBar)
 
                 }
             }
         }
     }
-    fun removePole(poleId:Int) {
+    fun removePole(poleId: Int, context: Context) {
         viewModelScope.launch {
             val result = savePoleUseCase.removePole(poleId)
+            isLoading.value = true
+
             when(result){
                 is ServiceResult.Loading -> {
 
                 }
                 is ServiceResult.Success -> {
+                    isLoading.value = false
+                    Toast.makeText(
+                        context,
+                        "Pole Successfully Remove",
+                        Toast.LENGTH_SHORT
+                    ).show()
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {
+                    isLoading.value = false
                     _events.send(LoginEvent.ShowSnackBar)
 
                 }
@@ -133,6 +163,8 @@ class DashboardViewModel @Inject constructor(
     }
     fun submitQR(QR:String) {
         viewModelScope.launch {
+            isLoading.value = true
+
             val result = savePoleUseCase.scanPole(
                 QR = QR
             )
@@ -141,9 +173,11 @@ class DashboardViewModel @Inject constructor(
 
                 }
                 is ServiceResult.Success -> {
+                    isLoading.value = false
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {
+                    isLoading.value = false
                     _events.send(LoginEvent.ShowSnackBar)
 
                 }

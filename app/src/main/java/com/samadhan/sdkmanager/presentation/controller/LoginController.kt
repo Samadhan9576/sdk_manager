@@ -22,6 +22,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,42 +37,50 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.samadhan.sdkmanager.domain.UserCredentialsDataStore
 import com.samadhan.sdkmanager.domain.event.LoginEvent
 import com.samadhan.sdkmanager.domain.viewModel.LoginViewModel
 import com.samadhan.sdkmanager.presentation.navigation.Screens
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginController(
     navController: NavController,
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val email = remember { mutableStateOf("samadhanm@siddhatech.com") }
     val password = remember { mutableStateOf("Qwertyuiop@1234") }
     val rememberMe = remember { mutableStateOf(false) }
-    val isLoading = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val state = loginViewModel.uiState.collectAsState()
+    val dataStore = UserCredentialsDataStore(context)
+    val userMap = dataStore.getUsers.collectAsState(initial = emptyMap())
+    val expanded = remember { mutableStateOf(false) }
+
     LaunchedEffect(true) {
         loginViewModel.events.collect { event ->
             Log.e("TAG", "LoginController: $event", )
             when (event) {
                 is LoginEvent.OnLoginSuccess -> {
+                    if (rememberMe.value) {
+                        dataStore.saveUser(email.value, password.value)
+                    }
                     navController.navigate(Screens.DashboardController.route)
                 }
 
                 is LoginEvent.ShowSnackBar -> {
 
-                }
-                is LoginEvent.isLoading -> {
-                    isLoading.value = true
                 }
                 else ->{}
             }
@@ -102,22 +113,45 @@ fun LoginController(
                     )
 
                     Text(text = "Email", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                    OutlinedTextField(
-                        value = email.value,
-                        onValueChange = { email.value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        placeholder = { Text("Enter email") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFEFF5FF),
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusManager.clearFocus()
-                            }
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded.value,
+                        onExpandedChange = { expanded.value = !expanded.value}
+                    ) {
+                        OutlinedTextField(
+                            value = email.value,
+                            onValueChange = { email.value = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                                .padding(vertical = 8.dp),
+                            placeholder = { Text("Enter email") },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFEFF5FF),
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusManager.clearFocus()
+                                }
+                            )
                         )
-                    )
+
+                        ExposedDropdownMenu(
+                            expanded = expanded.value,
+                            onDismissRequest = { expanded.value = false }
+                        ) {
+                            userMap.value.forEach { user ->
+                                DropdownMenuItem(
+                                    text = { Text(user.key) },
+                                    onClick = {
+                                        email.value = user.key
+                                        password.value = user.value
+                                        expanded.value = false
+                                    }
+                                )
+                            }
+                        }
+                    }
 
                     Text(text = "Password", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     OutlinedTextField(
@@ -179,22 +213,21 @@ fun LoginController(
                 }
             }
         }
-        CircularProgress(isLoading.value)
+        CircularProgress(state.value.isLoading)
     }
 }
-
 @Composable
-fun CircularProgress(isLoading: Boolean) {
-    if (isLoading) {
-        Box(
-            Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                trackColor = Color.Blue,
-                color = Color.Yellow
-            )
+fun CircularProgress(isShowing: Boolean) {
+    if (isShowing) {
+        Dialog(onDismissRequest = { }) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .background(Color.White, RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
     }
 }

@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,28 +65,25 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun DashboardController(
-    navController: NavHostController,
-    dashboardViewModel: DashboardViewModel = hiltViewModel()
+    navController: NavHostController, dashboardViewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state = dashboardViewModel.uiState
     Log.e("TAG", "DashboardController: ${dashboardViewModel.uiDetailsState.value.response}")
+    val context = LocalContext.current
     val detailState = dashboardViewModel.uiDetailsState.value
     val detailsPopUp = remember { mutableStateOf(false) }
     val polePopUp = remember { mutableStateOf(false) }
     val isLoading = remember { mutableStateOf(false) }
     LaunchedEffect(true) {
         dashboardViewModel.events.collect { event ->
-            Log.e("TAG", "DashboardController: $event", )
+            Log.e("TAG", "DashboardController: $event")
             if (event is LoginEvent.PoleDetailSuccess) {
-                if(event.clickId == 1){
+                if (event.clickId == 1) {
                     detailsPopUp.value = true
-                }else{
+                } else {
                     dashboardViewModel.getUserSelectedOptions(event.id)
                     polePopUp.value = true
                 }
-            }
-            if (event is LoginEvent.isLoading) {
-                isLoading.value = true
             }
         }
     }
@@ -109,16 +107,16 @@ fun DashboardController(
                 }, onResult = {
                     isScannerVisible.value = false
                     dashboardViewModel.submitQR(it)
-                    Log.e("TAG", "QRScannerScreen: $it" )
+                    Log.e("TAG", "QRScannerScreen: $it")
                 })
             } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(Color.White)
                         .padding(innerPadding)
                         .padding(16.dp)
-                )
-                {
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -145,20 +143,21 @@ fun DashboardController(
                         placeholder = { Text("Search") },
                         leadingIcon = {
                             Icon(Icons.Default.Search, contentDescription = "Search")
-                        }
-                    )
+                        })
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFF3F4F6))
+                            .background(Color.White, shape = RoundedCornerShape(8.dp))
                             .padding(vertical = 8.dp, horizontal = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Poll", fontWeight = FontWeight.SemiBold)
-                        Text("Actions", fontWeight = FontWeight.SemiBold)
+                        Text("Poll", fontWeight = FontWeight.SemiBold,
+                            color = Color.Black)
+                        Text("Actions", fontWeight = FontWeight.SemiBold,
+                            color = Color.Black)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -168,9 +167,7 @@ fun DashboardController(
                     ) {
                         dashboardViewModel.uiState.value.response?.content?.forEach { poll ->
                             PollRow(
-                                pollName = poll.title,
-                                date = poll.pollDate,
-                                id = poll.id
+                                pollName = poll.title, date = poll.pollDate, id = poll.id
                             ) { clickId ->
                                 dashboardViewModel.getPoleDetail(poll.id, clickId)
                             }
@@ -196,25 +193,22 @@ fun DashboardController(
                         }
                     }
                 }
-                CircularProgress(isLoading.value)
                 PoleDetailDialog(detailsPopUp, detailState)
-                SavePoleDetailDialog(
-                    polePopUp, detailState, onSubmit = { selected ->
-                        polePopUp.value = false
-                        dashboardViewModel.savePole(selected.toInt())
-                        println("Submitted: $selected")
-                    },
-                    onClose = {
-                        polePopUp.value = false
-                        println("Closed")
-                    },
-                    onRemoveVote = { selected ->
-                        polePopUp.value = false
-                        dashboardViewModel.removePole(selected)
-                        println("Vote Removed")
-                    }
-                )
+                SavePoleDetailDialog(polePopUp, detailState, onSubmit = { selected ->
+                    polePopUp.value = false
+                    dashboardViewModel.savePole(selected.toInt(), context)
+                    println("Submitted: $selected")
+                }, onClose = {
+                    polePopUp.value = false
+                    println("Closed")
+                }, onRemoveVote = { selected ->
+                    polePopUp.value = false
+                    dashboardViewModel.removePole(selected, context)
+                    println("Vote Removed")
+                })
             }
+            CircularProgress(dashboardViewModel.isLoading.value)
+
         }
     }
 }
@@ -242,8 +236,7 @@ fun PollRow(pollName: String, date: String, id: Int, onclick: (Int) -> Unit) {
             IconButton(
                 onClick = {
                     onclick(1)
-                },
-                modifier = Modifier.background(Color(0xFFFFC107), CircleShape)
+                }, modifier = Modifier.background(Color(0xFFFFC107), CircleShape)
             ) {
                 Icon(Icons.Default.Info, contentDescription = "Info", tint = Color.White)
             }
@@ -276,26 +269,26 @@ fun PoleDetailDialog(showDialog: MutableState<Boolean>, detailState: DetailsStat
     val values = detailState.response?.poll
     if (showDialog.value) {
         Dialog(
-            onDismissRequest = {},
-            properties = DialogProperties(usePlatformDefaultWidth = true)
+            onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = true)
         ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp)) {
-                    InfoRow(label = "Description:", value = values?.description?:"")
-                    InfoRow(label = "Meal Type:", value = values?.title?:"")
-                    InfoRow(label = "Poll Start Date:", value = values?.startDate?:"")
-                    InfoRow(label = "Poll End Date:", value = values?.endDate?:"")
-                    InfoRow(label = "Poll Date:", value = values?.pollDate?:"")
+            Box(Modifier.fillMaxWidth().background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp)
+                ) {
+                    InfoRow(label = "Description:", value = values?.description ?: "")
+                    InfoRow(label = "Meal Type:", value = values?.title ?: "")
+                    InfoRow(label = "Poll Start Date:", value = values?.startDate ?: "")
+                    InfoRow(label = "Poll End Date:", value = values?.endDate ?: "")
+                    InfoRow(label = "Poll Date:", value = values?.pollDate ?: "")
                     InfoRow(label = "Poll Option Type:", value = "single")
-                    InfoRow(label = "Options:", value = values?.options?.first()?.optionText?:"")
+                    InfoRow(label = "Options:", value = values?.options?.first()?.optionText ?: "")
                     Button(
-                        onClick = { showDialog.value = false },
-                        modifier = Modifier.fillMaxWidth()
+                        onClick = { showDialog.value = false }, modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("OK")
+                        Text("OK", color = Color.Black)
                     }
                 }
             }
@@ -304,17 +297,19 @@ fun PoleDetailDialog(showDialog: MutableState<Boolean>, detailState: DetailsStat
 }
 
 @Composable
-fun SavePoleDetailDialog(showDialog: MutableState<Boolean>, detailState: DetailsState,
-                         onSubmit: (String) -> Unit,
-                         onClose: () -> Unit,
-                         onRemoveVote: (Int) -> Unit) {
+fun SavePoleDetailDialog(
+    showDialog: MutableState<Boolean>,
+    detailState: DetailsState,
+    onSubmit: (String) -> Unit,
+    onClose: () -> Unit,
+    onRemoveVote: (Int) -> Unit
+) {
     val values = detailState.response?.poll
     if (showDialog.value) {
         Dialog(
-            onDismissRequest = {},
-            properties = DialogProperties(usePlatformDefaultWidth = true)
+            onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = true)
         ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
@@ -324,38 +319,42 @@ fun SavePoleDetailDialog(showDialog: MutableState<Boolean>, detailState: Details
                 ) {
 
                     Text(
-                        text = values?.title?:"",
+                        text = values?.title ?: "",
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = Color.Black
                     )
 
                     Text(
-                        text = values?.pollDate?:"",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                        text = values?.pollDate ?: "",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                        color = Color.Black
                     )
 
-                    Text(text = values?.description?:"")
+                    Text(text = values?.description ?: "",
+                        color = Color.Black)
 
                     Text(
                         text = "Choose an option:",
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = Color.Black
                     )
-
-                    var selectedOption = remember { mutableStateOf<String?>(null) }
-
+                    val selectedOption = remember { mutableStateOf<String?>(null) }
                     values?.options?.forEach { option ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { selectedOption.value = option.id.toString() }
-                                .padding(4.dp)
-                        ) {
+                                .padding(4.dp)) {
                             RadioButton(
                                 selected = selectedOption.value == option.id.toString(),
-                                onClick = { selectedOption.value = option.id.toString() }
+                                onClick = { selectedOption.value = option.id.toString() })
+                            Text(
+                                text = option.optionText ?: "",
+                                modifier = Modifier.padding(start = 8.dp),
+                                color = Color.Black
                             )
-                            Text(text = option.optionText?:"", modifier = Modifier.padding(start = 8.dp))
                         }
                     }
 
@@ -367,21 +366,20 @@ fun SavePoleDetailDialog(showDialog: MutableState<Boolean>, detailState: Details
                             onClick = { selectedOption.let { it.value?.let { it1 -> onSubmit(it1) } } },
                             enabled = selectedOption.value != null,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Gray,
-                                contentColor = Color.White
+                                containerColor = Color.Gray, contentColor = Color.White
                             )
                         ) {
-                            Text("Submit")
+                            Text("Submit",
+                                color = Color.Black)
                         }
 
                         Button(
-                            onClick = onClose,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Red,
-                                contentColor = Color.White
+                            onClick = onClose, colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red, contentColor = Color.White
                             )
                         ) {
-                            Text("Close")
+                            Text("Close",
+                                color = Color.White)
                         }
                     }
 
@@ -391,7 +389,8 @@ fun SavePoleDetailDialog(showDialog: MutableState<Boolean>, detailState: Details
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray)
                     ) {
-                        Text("Remove Vote")
+                        Text("Remove Vote",
+                            color = Color.Black)
                     }
                 }
             }
@@ -408,12 +407,13 @@ fun InfoRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+            color = Color.Black
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
+            text = value, style = MaterialTheme.typography.bodyMedium,
+            color = Color.Black
         )
     }
 }
@@ -423,10 +423,7 @@ fun generateQRBitmap(text: String): Bitmap {
     val black = androidx.compose.ui.graphics.Color.Black.toArgb()
     val white = androidx.compose.ui.graphics.Color.White.toArgb()
     val bits = QRCodeWriter().encode(
-        text,
-        BarcodeFormat.QR_CODE,
-        size,
-        size
+        text, BarcodeFormat.QR_CODE, size, size
     )
 
     val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
@@ -460,9 +457,7 @@ fun ShowQRScreen(qrText: String) {
         )
 
         Text(
-            text = qrText,
-            modifier = Modifier.padding(top = 16.dp),
-            color = Color.Black
+            text = qrText, modifier = Modifier.padding(top = 16.dp), color = Color.Black
         )
     }
 }
