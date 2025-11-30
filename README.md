@@ -12,7 +12,7 @@ The purpose of this SDK is to provide reusable services and functionalities that
 1. Open the project in **Android Studio**.
 2. Go to the library module (`SDK`).
 3. Build the `.aar` file:
-   - From the top menu → `Build` → `Make Module 'SDK'`.
+   - From the top menu → `Build` → `Make Module 'SDK'`. (./gradlew :SDK:assembleRelease)
    - Find the `.aar` file at:  
      ```
      app/build/outputs/aar/
