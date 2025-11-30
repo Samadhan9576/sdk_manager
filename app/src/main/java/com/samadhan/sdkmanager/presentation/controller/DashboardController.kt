@@ -1,6 +1,11 @@
 package com.samadhan.sdkmanager.presentation.controller
 
+import android.Manifest
+import android.graphics.Bitmap
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +45,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,6 +54,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import com.samadhan.sdkmanager.domain.event.LoginEvent
 import com.samadhan.sdkmanager.domain.viewModel.DashboardViewModel
 import com.samadhan.sdkmanager.domain.viewModel.DetailsState
@@ -79,104 +89,132 @@ fun DashboardController(
             }
         }
     }
+    val cameraPermission = Manifest.permission.CAMERA
+
+    var isScannerVisible = remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            isScannerVisible.value = true
+        }
+    }
+
     Surface {
         Scaffold { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
-            )
-            {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Active Polls",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Button(onClick = { /* Scan Poll Action */ }) {
-                        Text("Scan Poll")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = { },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFF3F4F6))
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Poll", fontWeight = FontWeight.SemiBold)
-                    Text("Actions", fontWeight = FontWeight.SemiBold)
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+            if (isScannerVisible.value) {
+                QRScannerScreen(onClose = {
+                    isScannerVisible.value = false
+                }, onResult = {
+                    isScannerVisible.value = false
+                    dashboardViewModel.submitQR(it)
+                    Log.e("TAG", "QRScannerScreen: $it" )
+                })
+            } else {
                 Column(
                     modifier = Modifier
-                ) {
-                    dashboardViewModel.uiState.value.response?.content?.forEach { poll ->
-                        PollRow(pollName = poll.title, date = poll.pollDate, id = poll.id) { clickId ->
-                            dashboardViewModel.getPoleDetail(poll.id,clickId)
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                )
+                {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Active Polls",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Button(onClick = {
+                            permissionLauncher.launch(cameraPermission)
+                        }) {
+                            Text("Scan Poll")
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = { },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF3F4F6))
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Poll", fontWeight = FontWeight.SemiBold)
+                        Text("Actions", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Column(
+                        modifier = Modifier
+                    ) {
+                        dashboardViewModel.uiState.value.response?.content?.forEach { poll ->
+                            PollRow(
+                                pollName = poll.title,
+                                date = poll.pollDate,
+                                id = poll.id
+                            ) { clickId ->
+                                dashboardViewModel.getPoleDetail(poll.id, clickId)
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(onClick = {}, enabled = false) {
+                            Text("< Previous")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("1", fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = {}, enabled = false) {
+                            Text("Next >")
+                        }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(onClick = {}, enabled = false) {
-                        Text("< Previous")
+                CircularProgress(isLoading.value)
+                PoleDetailDialog(detailsPopUp, detailState)
+                SavePoleDetailDialog(
+                    polePopUp, detailState, onSubmit = { selected ->
+                        polePopUp.value = false
+                        dashboardViewModel.savePole(selected.toInt())
+                        println("Submitted: $selected")
+                    },
+                    onClose = {
+                        polePopUp.value = false
+                        println("Closed")
+                    },
+                    onRemoveVote = { selected ->
+                        polePopUp.value = false
+                        dashboardViewModel.removePole(selected)
+                        println("Vote Removed")
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("1", fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = {}, enabled = false) {
-                        Text("Next >")
-                    }
-                }
+                )
             }
-            CircularProgress(isLoading.value)
-            PoleDetailDialog(detailsPopUp,detailState)
-            SavePoleDetailDialog(
-                polePopUp, detailState, onSubmit = { selected ->
-                    polePopUp.value = false
-                    dashboardViewModel.savePole(selected.toInt())
-                    println("Submitted: $selected")
-                },
-                onClose = {
-                    polePopUp.value = false
-                    println("Closed")
-                },
-                onRemoveVote = { selected ->
-                    polePopUp.value = false
-                    dashboardViewModel.removePole(selected)
-                    println("Vote Removed")
-                }
-            )
         }
     }
 }
@@ -376,6 +414,55 @@ fun InfoRow(label: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+fun generateQRBitmap(text: String): Bitmap {
+    val size = 600
+    val black = androidx.compose.ui.graphics.Color.Black.toArgb()
+    val white = androidx.compose.ui.graphics.Color.White.toArgb()
+    val bits = QRCodeWriter().encode(
+        text,
+        BarcodeFormat.QR_CODE,
+        size,
+        size
+    )
+
+    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
+
+    for (x in 0 until size) {
+        for (y in 0 until size) {
+            bmp.setPixel(x, y, if (bits[x, y]) black else white)
+        }
+    }
+
+    return bmp
+}
+
+
+@Composable
+fun ShowQRScreen(qrText: String) {
+    val bitmap = remember { generateQRBitmap(qrText) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = "QR Code",
+            modifier = Modifier.size(250.dp)
+        )
+
+        Text(
+            text = qrText,
+            modifier = Modifier.padding(top = 16.dp),
+            color = Color.Black
         )
     }
 }

@@ -8,6 +8,7 @@ import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.PoleDetails.PollDetailsResponse
 import com.samadhan.sdk.data.model.SubmitPollRequest
 import com.samadhan.sdk.data.model.SubmitPollResponse
+import com.samadhan.sdk.data.model.VerifyPoleRequest
 import com.samadhan.sdk.data.model.getUserSelectedOptions
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -51,6 +52,12 @@ interface PoleApiServices {
     suspend fun removePole(
         @Header("Authorization") token: String,
         @Body request: getUserSelectedOptions
+    ): ResponseBody
+
+    @POST("api/v1/vote/verifyPollVote")
+    suspend fun scanPole(
+        @Header("Authorization") token: String,
+        @Body request: VerifyPoleRequest
     ): ResponseBody
 
 

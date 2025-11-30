@@ -8,6 +8,7 @@ import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.PoleDetails.PollDetailsResponse
 import com.samadhan.sdk.data.model.SubmitPollRequest
 import com.samadhan.sdk.data.model.SubmitPollResponse
+import com.samadhan.sdk.data.model.VerifyPoleRequest
 import com.samadhan.sdk.data.model.getUserSelectedOptions
 import okhttp3.ResponseBody
 
@@ -38,5 +39,9 @@ class PoleRepositoryImpl(
 
     override suspend fun removePole(token: String, request: getUserSelectedOptions): ResponseBody {
         return api.removePole(token,request)
+    }
+
+    override suspend fun scanPole(token: String, request: VerifyPoleRequest): ResponseBody {
+        return api.scanPole(token,request)
     }
 }

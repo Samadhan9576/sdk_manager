@@ -88,3 +88,8 @@ data class SubmitPollResponse(
     val status: String,
     val message: String
 )
+
+data class VerifyPoleRequest(
+    val pollQRCodeText: String,
+    val userId: Int
+)

@@ -131,6 +131,25 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
+    fun submitQR(QR:String) {
+        viewModelScope.launch {
+            val result = savePoleUseCase.scanPole(
+                QR = QR
+            )
+            when(result){
+                is ServiceResult.Loading -> {
+
+                }
+                is ServiceResult.Success -> {
+//                    Log.e("TAG", "getPole:${result.data} ", )
+                }
+                is ServiceResult.Error -> {
+                    _events.send(LoginEvent.ShowSnackBar)
+
+                }
+            }
+        }
+    }
 }
 
 data class DashboardState(

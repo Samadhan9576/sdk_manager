@@ -69,4 +69,15 @@ dependencies {
 
     implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
     implementation("androidx.compose.runtime:runtime:1.6.0")
+
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    val camerax_version = "1.3.4"
+
+    implementation ("androidx.camera:camera-core:$camerax_version")
+    implementation ("androidx.camera:camera-camera2:$camerax_version")
+    implementation ("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation ("androidx.camera:camera-view:$camerax_version")
+
+    implementation("com.google.zxing:core:3.5.2")
+
 }
