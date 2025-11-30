@@ -4,9 +4,10 @@ import android.util.Log
 import com.samadhan.sdk.data.model.ServiceResult
 import com.samadhan.sdk.data.model.User
 import com.samadhan.sdk.domain.service.UserRepository
+import javax.inject.Inject
 
 
-class GetUserUseCase(
+class GetUserUseCase @Inject constructor(
     private val repository: UserRepository
 ) {
     suspend operator fun invoke(id: String): ServiceResult<User> {
@@ -17,7 +18,7 @@ class GetUserUseCase(
         } catch (e: Exception) {
             Log.e("TAG", "invoke: $e", )
 
-            ServiceResult.Error(e)
+            ServiceResult.Error(e.message?:"")
         }
     }
 }
