@@ -161,7 +161,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    fun submitQR(QR:String) {
+    fun submitQR(QR: String, context: Context) {
         viewModelScope.launch {
             isLoading.value = true
 
@@ -174,6 +174,11 @@ class DashboardViewModel @Inject constructor(
                 }
                 is ServiceResult.Success -> {
                     isLoading.value = false
+                    Toast.makeText(
+                        context,
+                        "Pole Successfully Scan",
+                        Toast.LENGTH_SHORT
+                    ).show()
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {

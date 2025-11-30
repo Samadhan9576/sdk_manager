@@ -106,7 +106,7 @@ fun DashboardController(
                     isScannerVisible.value = false
                 }, onResult = {
                     isScannerVisible.value = false
-                    dashboardViewModel.submitQR(it)
+                    dashboardViewModel.submitQR(it,context)
                     Log.e("TAG", "QRScannerScreen: $it")
                 })
             } else {
