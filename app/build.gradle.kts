@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("com.google.gms.google-services")
+
 }
 
 android {
@@ -81,5 +83,8 @@ dependencies {
     implementation("com.google.zxing:core:3.5.2")
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    implementation("com.google.firebase:firebase-messaging:24.1.0")
+    implementation("com.google.firebase:firebase-analytics:22.0.2")
 
 }

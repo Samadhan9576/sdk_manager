@@ -1,8 +1,14 @@
 package com.samadhan.sdkmanager.presentation.controller
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,8 +50,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.samadhan.sdkmanager.R
 import com.samadhan.sdkmanager.domain.UserCredentialsDataStore
 import com.samadhan.sdkmanager.domain.event.LoginEvent
 import com.samadhan.sdkmanager.domain.viewModel.LoginViewModel
@@ -59,8 +68,8 @@ fun LoginController(
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val email = remember { mutableStateOf("samadhanm@siddhatech.com") }
-    val password = remember { mutableStateOf("Qwertyuiop@1234") }
+    val email = remember { mutableStateOf("") }
+    val password = remember { mutableStateOf("") }
     val rememberMe = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val state = loginViewModel.uiState.collectAsState()
@@ -76,6 +85,9 @@ fun LoginController(
                     if (rememberMe.value) {
                         dataStore.saveUser(email.value, password.value)
                     }
+                    context.showLocalNotification(
+                        "Login Successful!", "Welcome to SiddhaPole ${loginViewModel.uiState.value.response?.userDetails?.userName?.dropLast(1)}"
+                    )
                     navController.navigate(Screens.DashboardController.route)
                 }
 
@@ -90,10 +102,15 @@ fun LoginController(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8F9FB)),
+                .background(Color(0xFFF8F9FB))
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
+                    focusManager.clearFocus()
+                },
             contentAlignment = Alignment.Center
-        )
-        {
+        ) {
             Card(
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(8.dp),
@@ -135,7 +152,6 @@ fun LoginController(
                                 }
                             )
                         )
-
                         ExposedDropdownMenu(
                             expanded = expanded.value,
                             onDismissRequest = { expanded.value = false }
@@ -152,7 +168,6 @@ fun LoginController(
                             }
                         }
                     }
-
                     Text(text = "Password", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     OutlinedTextField(
                         value = password.value,
@@ -171,7 +186,6 @@ fun LoginController(
                             }
                         )
                     )
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -194,7 +208,6 @@ fun LoginController(
                             modifier = Modifier.clickable { }
                         )
                     }
-
                     Button(
                         onClick = {
                             loginViewModel.login(email.value, password.value, rememberMe.value)
@@ -230,4 +243,25 @@ fun CircularProgress(isShowing: Boolean) {
             }
         }
     }
+}
+
+fun Context.showLocalNotification(title: String, message: String) {
+    val channelId = "default_channel"
+    val notificationManager =
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(channelId, "General Notifications",
+            NotificationManager.IMPORTANCE_HIGH)
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    val builder = NotificationCompat.Builder(applicationContext, channelId)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setColor(ContextCompat.getColor(this, R.color.purple_500))
+        .setAutoCancel(true)
+
+    notificationManager.notify(1001, builder.build())
 }

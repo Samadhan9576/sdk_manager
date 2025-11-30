@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "267375970262",
+    "project_id": "pole-486d1",
+    "storage_bucket": "pole-486d1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:267375970262:android:2087f7ecc39df449994677",
+        "android_client_info": {
+          "package_name": "com.samadhan.sdkmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMz5dcxL26oKBsZ_XsWBC3qd9t9n2fde0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
