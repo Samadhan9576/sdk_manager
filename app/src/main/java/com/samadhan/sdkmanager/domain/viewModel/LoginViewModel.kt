@@ -30,6 +30,7 @@ class LoginViewModel @Inject constructor(
             val result = loginUseCase.invoke(LoginRequest(email,password,remember))
             when(result){
                 is ServiceResult.Loading -> {
+                    _events.send(LoginEvent.isLoading)
                     _uiState.value = LoginState(isLoading = true)
                 }
                 is ServiceResult.Success -> {

@@ -1,5 +1,6 @@
 package com.samadhan.sdkmanager.presentation.controller
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,13 +51,15 @@ fun LoginController(
     navController: NavController,
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
-    val email = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("samadhanm@siddhatech.com") }
+    val password = remember { mutableStateOf("Qwertyuiop@1234") }
     val rememberMe = remember { mutableStateOf(false) }
+    val isLoading = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val state = loginViewModel.uiState.collectAsState()
     LaunchedEffect(true) {
         loginViewModel.events.collect { event ->
+            Log.e("TAG", "LoginController: $event", )
             when (event) {
                 is LoginEvent.OnLoginSuccess -> {
                     navController.navigate(Screens.DashboardController.route)
@@ -65,6 +68,10 @@ fun LoginController(
                 is LoginEvent.ShowSnackBar -> {
 
                 }
+                is LoginEvent.isLoading -> {
+                    isLoading.value = true
+                }
+                else ->{}
             }
         }
     }
@@ -172,7 +179,7 @@ fun LoginController(
                 }
             }
         }
-        CircularProgress(state.value.isLoading)
+        CircularProgress(isLoading.value)
     }
 }
 
@@ -185,7 +192,7 @@ fun CircularProgress(isLoading: Boolean) {
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                trackColor = Color.White,
+                trackColor = Color.Blue,
                 color = Color.Yellow
             )
         }

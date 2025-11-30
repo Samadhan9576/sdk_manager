@@ -69,3 +69,22 @@ data class GetPollsRequest(
     val sortBy: String = "pollDate",
     val orderBy: String = "desc"
 )
+
+data class getUserSelectedOptions(
+val pollId:Int, val userId: Int
+)
+
+data class GetUserSelectedOptionsResponse(
+    val id: Int,
+    val optionText: String
+)
+
+data class SubmitPollRequest(
+    val pollId: Int,
+    val selectedOptionIds: List<Int>,
+    val userId: Int
+)
+data class SubmitPollResponse(
+    val status: String,
+    val message: String
+)

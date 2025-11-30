@@ -24,7 +24,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         SdkInitializer.init("https://jsonplaceholder.typicode.com/","https://li1761-109.members.linode.com:8096/")
-
         setContent {
             val viewModel: UserViewModel = hiltViewModel()
             val userState = viewModel.uiState.value
