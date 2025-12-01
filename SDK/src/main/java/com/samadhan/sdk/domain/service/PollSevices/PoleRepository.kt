@@ -6,6 +6,7 @@ import com.samadhan.sdk.data.model.GetUserSelectedOptionsResponse
 import com.samadhan.sdk.data.model.LoginRequest
 import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.PoleDetails.PollDetailsResponse
+import com.samadhan.sdk.data.model.QrRequest
 import com.samadhan.sdk.data.model.SubmitPollRequest
 import com.samadhan.sdk.data.model.SubmitPollResponse
 import com.samadhan.sdk.data.model.VerifyPoleRequest
@@ -20,4 +21,5 @@ interface PoleRepository {
     suspend fun savePole(token: String, request: SubmitPollRequest): SubmitPollResponse
     suspend fun removePole(token: String, request: getUserSelectedOptions): ResponseBody
     suspend fun scanPole(token: String, request: VerifyPoleRequest): ResponseBody
+    suspend fun generateQr(token: String, request: QrRequest): retrofit2.Response<ResponseBody>
 }

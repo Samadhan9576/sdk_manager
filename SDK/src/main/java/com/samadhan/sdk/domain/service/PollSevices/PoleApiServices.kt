@@ -6,10 +6,12 @@ import com.samadhan.sdk.data.model.GetUserSelectedOptionsResponse
 import com.samadhan.sdk.data.model.LoginRequest
 import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.PoleDetails.PollDetailsResponse
+import com.samadhan.sdk.data.model.QrRequest
 import com.samadhan.sdk.data.model.SubmitPollRequest
 import com.samadhan.sdk.data.model.SubmitPollResponse
 import com.samadhan.sdk.data.model.VerifyPoleRequest
 import com.samadhan.sdk.data.model.getUserSelectedOptions
+import okhttp3.Response
 import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -60,5 +62,10 @@ interface PoleApiServices {
         @Body request: VerifyPoleRequest
     ): ResponseBody
 
+    @POST("api/v1/poll/generate-qr")
+    suspend fun generateQr(
+        @Header("Authorization") token: String,
+        @Body request: QrRequest
+    ): retrofit2.Response<ResponseBody>
 
 }

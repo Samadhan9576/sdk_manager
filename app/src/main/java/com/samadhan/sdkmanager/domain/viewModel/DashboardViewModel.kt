@@ -1,6 +1,7 @@
 package com.samadhan.sdkmanager.domain.viewModel
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
@@ -18,6 +19,7 @@ import com.samadhan.sdk.domain.usecase.pole.SavePoleUseCase
 import com.samadhan.sdkmanager.domain.event.LoginEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -57,6 +59,35 @@ class DashboardViewModel @Inject constructor(
                     isLoading.value = false
                     _uiState.value = DashboardState(error = "")
                     _events.send(LoginEvent.ShowSnackBar)
+                }
+            }
+        }
+    }
+
+
+    private val _qrBitmap = MutableStateFlow<Bitmap?>(null)
+    val qrBitmap = _qrBitmap
+
+
+    fun loadQr() {
+        viewModelScope.launch {
+            val result = savePoleUseCase.fetchQr()
+            when (result) {
+                is ServiceResult.Loading -> {
+                    _uiDetailsState.value = DetailsState(isLoading = true)
+
+                }
+
+                is ServiceResult.Success -> {
+                    _events.send(LoginEvent.ShowQR)
+                    _qrBitmap.value = result.data
+                }
+
+                is ServiceResult.Error -> {
+                    isLoading.value = false
+                    _events.send(LoginEvent.ShowSnackBar)
+                    _uiDetailsState.value = DetailsState(error = "")
+
                 }
             }
         }
@@ -182,12 +213,26 @@ class DashboardViewModel @Inject constructor(
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {
+                    Toast.makeText(
+                        context,
+                        "${result.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     isLoading.value = false
                     _events.send(LoginEvent.ShowSnackBar)
 
                 }
             }
         }
+    }
+
+    fun logOut(context: Context) {
+        savePoleUseCase.logOut()
+        Toast.makeText(
+            context,
+            "Successfully Log Out",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
 

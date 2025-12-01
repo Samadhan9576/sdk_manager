@@ -3,9 +3,9 @@ package com.samadhan.sdkmanager.presentation.controller
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +27,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,6 +55,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.samadhan.sdkmanager.R
 import com.samadhan.sdkmanager.domain.UserCredentialsDataStore
 import com.samadhan.sdkmanager.domain.event.LoginEvent
@@ -76,6 +78,12 @@ fun LoginController(
     val dataStore = UserCredentialsDataStore(context)
     val userMap = dataStore.getUsers.collectAsState(initial = emptyMap())
     val expanded = remember { mutableStateOf(false) }
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setStatusBarColor(
+        color = Color.Transparent,
+        darkIcons = true
+    )
+    BackHandler {  }
 
     LaunchedEffect(true) {
         loginViewModel.events.collect { event ->
@@ -116,7 +124,8 @@ fun LoginController(
                 elevation = CardDefaults.cardElevation(8.dp),
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(0.85f)
+                    .fillMaxWidth(0.85f),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFD9E1E6))
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -126,11 +135,10 @@ fun LoginController(
                         text = "Login",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 20.dp)
+                        modifier = Modifier.padding(bottom = 20.dp),
+                        color = Color(0xFF121A1F)
                     )
-
-                    Text(text = "Email", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-
+                    Text(text = "Email", fontSize = 14.sp, fontWeight = FontWeight.Medium,color = Color(0xFF131B20))
                     ExposedDropdownMenuBox(
                         expanded = expanded.value,
                         onExpandedChange = { expanded.value = !expanded.value}
@@ -142,9 +150,14 @@ fun LoginController(
                                 .fillMaxWidth()
                                 .menuAnchor()
                                 .padding(vertical = 8.dp),
-                            placeholder = { Text("Enter email") },
+                            placeholder = { Text("Enter email", color = Color(0xFF26282E)) },
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color(0xFFEFF5FF),
+                                focusedContainerColor = Color(0xFFEDF3FD),
+                                unfocusedContainerColor = Color(0xFFE0E1EB),
+                                focusedTextColor = Color(0xFF26282E),
+                                unfocusedTextColor = Color(0xFF26282E),
+                                focusedIndicatorColor = Color(0xFF495D91),
+                                unfocusedIndicatorColor = Color(0xFF495D91)
                             ),
                             keyboardActions = KeyboardActions(
                                 onDone = {
@@ -154,31 +167,38 @@ fun LoginController(
                         )
                         ExposedDropdownMenu(
                             expanded = expanded.value,
-                            onDismissRequest = { expanded.value = false }
+                            onDismissRequest = { expanded.value = false },
+                            containerColor = Color(0xFFEAECF6)
                         ) {
                             userMap.value.forEach { user ->
                                 DropdownMenuItem(
-                                    text = { Text(user.key) },
+                                    text = { Text(user.key, color = Color(0xFF26282E)) },
                                     onClick = {
                                         email.value = user.key
                                         password.value = user.value
                                         expanded.value = false
-                                    }
+                                        focusManager.clearFocus()
+                                    },
                                 )
                             }
                         }
                     }
-                    Text(text = "Password", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Text(text = "Password", fontSize = 14.sp, fontWeight = FontWeight.Medium,color = Color(0xFF131B20))
                     OutlinedTextField(
                         value = password.value,
                         onValueChange = { password.value = it },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
-                        placeholder = { Text("Enter password") },
+                        placeholder = { Text("Enter password", color = Color(0xFF26282E)) },
                         visualTransformation = PasswordVisualTransformation(),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFEFF5FF),
+                            focusedContainerColor = Color(0xFFEDF3FD),
+                            unfocusedContainerColor = Color(0xFFE0E1EB),
+                            focusedTextColor = Color(0xFF26282E),
+                            unfocusedTextColor = Color(0xFF26282E),
+                            focusedIndicatorColor = Color(0xFF495D91),
+                            unfocusedIndicatorColor = Color(0xFF495D91)
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = {
@@ -196,9 +216,10 @@ fun LoginController(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
                                 checked = rememberMe.value,
-                                onCheckedChange = { rememberMe.value = it }
+                                onCheckedChange = { rememberMe.value = it },
+                                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF26282E), uncheckedColor = Color(0xFF26282E),checkmarkColor = Color.White)
                             )
-                            Text(text = "Remember me")
+                            Text(text = "Remember me",color = Color(0xFF131B20))
                         }
                         Spacer(Modifier.width(8.dp))
                         Text(

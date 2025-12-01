@@ -87,4 +87,6 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging:24.1.0")
     implementation("com.google.firebase:firebase-analytics:22.0.2")
 
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
+
 }

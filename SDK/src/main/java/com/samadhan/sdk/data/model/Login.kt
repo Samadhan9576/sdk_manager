@@ -93,3 +93,8 @@ data class VerifyPoleRequest(
     val pollQRCodeText: String,
     val userId: Int
 )
+
+data class QrRequest(
+    val pollId: Int,
+    val userId: Int
+)

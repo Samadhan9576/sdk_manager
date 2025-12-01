@@ -6,6 +6,7 @@ import com.samadhan.sdk.data.model.GetUserSelectedOptionsResponse
 import com.samadhan.sdk.data.model.LoginRequest
 import com.samadhan.sdk.data.model.LoginResponse
 import com.samadhan.sdk.data.model.PoleDetails.PollDetailsResponse
+import com.samadhan.sdk.data.model.QrRequest
 import com.samadhan.sdk.data.model.SubmitPollRequest
 import com.samadhan.sdk.data.model.SubmitPollResponse
 import com.samadhan.sdk.data.model.VerifyPoleRequest
@@ -43,5 +44,9 @@ class PoleRepositoryImpl(
 
     override suspend fun scanPole(token: String, request: VerifyPoleRequest): ResponseBody {
         return api.scanPole(token,request)
+    }
+
+    override suspend fun generateQr(token: String, request: QrRequest): retrofit2.Response<ResponseBody> {
+        return api.generateQr(token,request)
     }
 }

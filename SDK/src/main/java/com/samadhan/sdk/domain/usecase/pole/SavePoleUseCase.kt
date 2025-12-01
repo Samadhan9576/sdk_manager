@@ -1,6 +1,9 @@
 package com.samadhan.sdk.domain.usecase.pole
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
+import com.samadhan.sdk.data.model.QrRequest
 import com.samadhan.sdk.data.model.ServiceResult
 import com.samadhan.sdk.data.model.SubmitPollRequest
 import com.samadhan.sdk.data.model.SubmitPollResponse
@@ -56,4 +59,34 @@ class SavePoleUseCase @Inject constructor(
             ServiceResult.Error(e.localizedMessage ?: "Unknown error")
         }
     }
+
+    suspend fun fetchQr(): ServiceResult<Bitmap> {
+        return try {
+            val token = Constants.token
+
+            val response = repository.generateQr("Bearer $token", QrRequest(pollId = 955, userId = 161))
+
+
+            if (response.isSuccessful) {
+                val bytes = response.body()?.bytes()
+
+                if (bytes != null) {
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    return ServiceResult.Success(bitmap)
+                } else {
+                    return ServiceResult.Error("Empty image data")
+                }
+            } else {
+                return ServiceResult.Error("Server error: ${response.code()} - ${response.message()}")
+            }
+
+        } catch (e: Exception) {
+            Log.e("TAG", "fetchQr error: ${e.localizedMessage}")
+            return ServiceResult.Error(e.localizedMessage ?: "Unknown error")
+        }
+    }
+    fun logOut(){
+        Constants.token = ""
+    }
+
 }
