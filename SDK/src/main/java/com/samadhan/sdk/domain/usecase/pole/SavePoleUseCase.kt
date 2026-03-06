@@ -60,11 +60,12 @@ class SavePoleUseCase @Inject constructor(
         }
     }
 
-    suspend fun fetchQr(): ServiceResult<Bitmap> {
+    suspend fun fetchQr(poleId:Int): ServiceResult<Bitmap> {
         return try {
             val token = Constants.token
+            val userId  = Constants.userId
 
-            val response = repository.generateQr("Bearer $token", QrRequest(pollId = 955, userId = 161))
+            val response = repository.generateQr("Bearer $token", QrRequest(pollId = poleId, userId = userId))
 
 
             if (response.isSuccessful) {

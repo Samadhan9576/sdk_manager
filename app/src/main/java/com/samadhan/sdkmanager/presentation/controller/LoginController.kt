@@ -60,8 +60,12 @@ import com.samadhan.sdkmanager.R
 import com.samadhan.sdkmanager.domain.UserCredentialsDataStore
 import com.samadhan.sdkmanager.domain.event.LoginEvent
 import com.samadhan.sdkmanager.domain.viewModel.LoginViewModel
+import com.samadhan.sdkmanager.presentation.controller.AppConst.username
 import com.samadhan.sdkmanager.presentation.navigation.Screens
 
+object AppConst{
+    var username : String = ""
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,6 +97,7 @@ fun LoginController(
                     if (rememberMe.value) {
                         dataStore.saveUser(email.value, password.value)
                     }
+                    username = loginViewModel.uiState.value.response?.userDetails?.userName?.dropLast(1).toString()
                     context.showLocalNotification(
                         "Login Successful!", "Welcome to SiddhaPole ${loginViewModel.uiState.value.response?.userDetails?.userName?.dropLast(1)}"
                     )

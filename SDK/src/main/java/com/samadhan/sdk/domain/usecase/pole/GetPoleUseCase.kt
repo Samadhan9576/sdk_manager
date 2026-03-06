@@ -10,11 +10,10 @@ import javax.inject.Inject
 class GetPoleUseCase @Inject constructor(
     private val repository: PoleRepository
 ) {
-    suspend operator fun invoke(): ServiceResult<GetPollsResponse> {
+    suspend operator fun invoke(page:Int = 0): ServiceResult<GetPollsResponse> {
         return try {
             val token = Constants.token
-            val userId = Constants.userId
-            val result = repository.getPolls(GetPollsRequest() ,"Bearer $token")
+            val result = repository.getPolls(GetPollsRequest().copy(page = page) ,"Bearer $token")
             ServiceResult.Success(result)
         } catch (e: Exception) {
             ServiceResult.Error(e.localizedMessage ?: "Unknown error")

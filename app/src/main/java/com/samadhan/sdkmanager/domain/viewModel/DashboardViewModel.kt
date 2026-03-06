@@ -35,6 +35,7 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = mutableStateOf(DashboardState())
     val uiState: State<DashboardState> = _uiState
     val isLoading = mutableStateOf(false)
+    val poleSuccess = mutableStateOf(false)
     private val _uiDetailsState = mutableStateOf(DetailsState())
     val uiDetailsState: State<DetailsState> = _uiDetailsState
     private val _events = Channel<LoginEvent>()
@@ -42,9 +43,9 @@ class DashboardViewModel @Inject constructor(
     init {
         getPole()
     }
-    fun getPole() {
+    fun getPole(page:Int = 0) {
         viewModelScope.launch {
-            val result = getPoleUseCase.invoke()
+            val result = getPoleUseCase.invoke(page = page)
             isLoading.value = true
             when(result){
                 is ServiceResult.Loading -> {
@@ -69,9 +70,9 @@ class DashboardViewModel @Inject constructor(
     val qrBitmap = _qrBitmap
 
 
-    fun loadQr() {
+    fun loadQr(poleId:Int) {
         viewModelScope.launch {
-            val result = savePoleUseCase.fetchQr()
+            val result = savePoleUseCase.fetchQr(poleId)
             when (result) {
                 is ServiceResult.Loading -> {
                     _uiDetailsState.value = DetailsState(isLoading = true)
@@ -204,6 +205,7 @@ class DashboardViewModel @Inject constructor(
 
                 }
                 is ServiceResult.Success -> {
+                    poleSuccess.value = true
                     isLoading.value = false
                     Toast.makeText(
                         context,
@@ -213,6 +215,7 @@ class DashboardViewModel @Inject constructor(
 //                    Log.e("TAG", "getPole:${result.data} ", )
                 }
                 is ServiceResult.Error -> {
+
                     Toast.makeText(
                         context,
                         "${result.message}",

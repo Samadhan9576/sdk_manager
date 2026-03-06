@@ -64,6 +64,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.samadhan.sdkmanager.domain.event.LoginEvent
 import com.samadhan.sdkmanager.domain.viewModel.DashboardViewModel
 import com.samadhan.sdkmanager.domain.viewModel.DetailsState
+import com.samadhan.sdkmanager.presentation.controller.AppConst.username
 import com.samadhan.sdkmanager.presentation.navigation.Screens
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -135,7 +136,9 @@ fun DashboardController(
                         .padding(16.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().background(Color.White),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -221,7 +224,7 @@ fun DashboardController(
                                 pollName = poll.title, date = poll.pollDate,{ clickId ->
                                     dashboardViewModel.getPoleDetail(poll.id, clickId)}
                             ) {
-                                dashboardViewModel.loadQr()
+                                dashboardViewModel.loadQr(poll.id)
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                         }
@@ -229,24 +232,32 @@ fun DashboardController(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    /**Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(onClick = {}, enabled = false) {
-                            Text("< Previous")
+                    if (dashboardViewModel.uiState.value.response?.totalPages != 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(onClick = {
+                                dashboardViewModel.getPole()
+                            }, enabled = false) {
+                                Text("< Previous")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("1", fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(onClick = {
+                                dashboardViewModel.getPole(page = 1)
+                            }, enabled = false) {
+                                Text("Next >")
+                            }
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("1", fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {}, enabled = false) {
-                            Text("Next >")
-                        }
-                    }*/
+                    }
                 }
                 PoleDetailDialog(detailsPopUp, detailState)
                 QRDetailDialog(showQR, qrBitmap)
+                QRSuccessDialog(dashboardViewModel.poleSuccess,detailState)
+
                 SavePoleDetailDialog(polePopUp, detailState, onSubmit = { selected ->
                     polePopUp.value = false
                     dashboardViewModel.savePole(selected.toInt(), context)
@@ -271,7 +282,8 @@ fun DashboardController(
 fun PollRow(pollName: String, date: String, onclick: (Int) -> Unit, qrOnclick: () -> Unit) {
     Row(
         modifier = Modifier
-            .fillMaxWidth().background(Color.White)
+            .fillMaxWidth()
+            .background(Color.White)
             .padding(horizontal = 8.dp, vertical = 6.dp),
 
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -319,21 +331,61 @@ fun formatDate(inputDate: String): String {
 }
 
 @Composable
+fun QRSuccessDialog(showDialog: MutableState<Boolean>, detail: DetailsState) {
+    if (showDialog.value) {
+        Dialog(
+            onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = true)
+        ) {
+            Box(
+                Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Success",color = Color(0xFF131111))
+                    Text("QR code verified successfully",color = Color(0xFF131111))
+                    Text("Pole Title : Dinner",color = Color(0xFF131111))
+                    Text("Username : $username",color = Color(0xFF131111))
+                    Text("Selected Option : Yes",color = Color(0xFF131111))
+                    Text("Vote Timestamp : ${LocalDate.now()}",color = Color(0xFF131111))
+
+                    Button(
+                        onClick = { showDialog.value = false }, modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Ok", color = Color.Black)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun QRDetailDialog(showDialog: MutableState<Boolean>, qrBitmap: Bitmap?) {
     if (showDialog.value) {
         Dialog(
             onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = true)
         ) {
-            Box(Modifier.fillMaxWidth().background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+            Box(Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White, shape = RoundedCornerShape(16.dp)).padding(16.dp),
+                        .background(Color.White, shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (qrBitmap == null) {
-                        Text("Loading QR…")
+                        Text("QR not present")
                     } else {
                         Image(
                             bitmap = qrBitmap.asImageBitmap(),
@@ -359,7 +411,9 @@ fun PoleDetailDialog(showDialog: MutableState<Boolean>, detailState: DetailsStat
         Dialog(
             onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = true)
         ) {
-            Box(Modifier.fillMaxWidth().background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+            Box(Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -397,7 +451,9 @@ fun SavePoleDetailDialog(
         Dialog(
             onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = true)
         ) {
-            Box(Modifier.fillMaxWidth().background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+            Box(Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
